@@ -14,5 +14,9 @@
     "docx-pdf": "^0.0.1",
     "fs": "^0.0.1-security",
     "pdf-to-printer": "^5.6.0"
+  },
+  "devDependencies": {
+    "canvas": "^2.11.2",
+    "jsbarcode": "^3.11.6"
   }
 }
