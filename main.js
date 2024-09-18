@@ -7,20 +7,20 @@ const path = require("path");
 const { createCanvas } = require("canvas");
 const jsBarcode = require("jsbarcode");
 
+const { spawn } = require("child_process");
 
-const canvas = createCanvas(113, 30);
+let command = `Start-Process "C:\\Users\\HP\\OneDrive\\Desktop\\Zebra-Print-Test-Beta\\output.docx" -Verb print`;
 
-let barcodeValue = "1234567890";
+spawn("powershell.exe", [command]);
 
-jsBarcode(canvas, barcodeValue, {
-    format: 'CODE128', // Barcode format
-    width: 2, // Width of each bar
-    height: 30, // Height of the barcode
-    displayValue: true, // Show the value below the barcode
-    fontSize: 15,
+const readline = require('readline');
+
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
 });
 
-let barcodeImg = canvas.toDataURL("image/png");
+const canvas = createCanvas(113, 30);
 
 let img = new docx.ImageRun({
     type: "png",
@@ -31,32 +31,137 @@ let img = new docx.ImageRun({
     }
 })
 
-let barCodeImg = new docx.ImageRun({
-    type: "png",
-    data: barcodeImg,
-    transformation: {
-        width: 113,
-        height: 30
-    }
-})
 
 let skuNumbers = 1000;
 
-let doc = new docx.Document({
-    sections: [
-        {
-            properties: {page: {size: {width: "3cm", height: "2cm"}, margin: {left: "0cm", right: "0cm", top: "0cm", bottom: "0cm"}}},
-            children: [
-                new docx.Paragraph({
+let inputting = true;
+
+const generateBarcode = async () => {
+    let value = "";
+    for (let i = 0; i < 12; i++) {
+        value += Math.floor(Math.random() * 9)
+    } 
+
+    console.log(value);
+    return value;
+}
+
+// A function to wrap rl.question in a Promise
+const askQuestion = (question) => {
+    return new Promise((resolve) => {
+        rl.question(question, resolve);
+    });
+};
+
+(async () => {
+    let SKU1 = await askQuestion('Enter SKU1: ');
+    let SKU2 = await askQuestion('Enter SKU2: ');
+    let SKU3 = await askQuestion('Enter SKU3: ');
+
+    if (SKU1 != "" && SKU2 != "" && SKU3 != "") {
+        let barcodeValue = await generateBarcode();
+
+        jsBarcode(canvas, barcodeValue, {
+            format: 'CODE39', // Barcode format
+            width: 2, // Width of each bar
+            height: 30, // Height of the barcode
+            displayValue: true, // Show the value below the barcode
+            fontSize: 15,
+        });
+
+        let barcodeImg = canvas.toDataURL("image/png");
+
+        let barCodeImg = new docx.ImageRun({
+            type: "png",
+            data: barcodeImg,
+            transformation: {
+                width: 113,
+                height: 30
+            }
+        })
+        
+
+        let doc = new docx.Document({
+            sections: [
+                {
+                    properties: {page: {size: {width: "3cm", height: "2cm"}, margin: {left: "0cm", right: "0cm", top: "0cm", bottom: "0cm"}}},
                     children: [
-                        img,
-                        barCodeImg,
-                    ]
-                }),
+                        new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            border: {
+                                bottom: {
+                                    style: docx.BorderStyle.SINGLE,
+                                    size: 3,
+                                    color: "000000" 
+                                }
+                            },
+                            children: [
+                                new docx.TextRun({
+                                    text: "S K U",
+                                    size: 20,
+                                    bold: true,
+                                    font: "Calibri (Body)"
+                                }),
+                            ]
+                        }),
+                        new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            children: [
+                                new docx.TextRun({
+                                    text: "1                           2                           3",
+                                    size: 10,
+                                    bold: true,
+                                    font: "Calibri (Body)",
+                                })
+                            ]
+                        }),
+                        new docx.Paragraph({
+                            alignment: docx.AlignmentType.CENTER,
+                            border: {
+                                top: {
+                                    style: docx.BorderStyle.SINGLE,
+                                    size: 3,
+                                    color: "000000"
+                                },
+                                bottom: {
+                                    style: docx.BorderStyle.SINGLE,
+                                    size: 3,
+                                    color: "000000" 
+                                }
+                            },
+                            children: [
+                                new docx.TextRun({
+                                    text: `${SKU1}  |  ${SKU2}  |  ${SKU3}`,
+                                    size: 17,
+                                    bold: true,
+                                    font: "Calibri (Body)",
+                                })
+                            ]
+                        }),
+                        new docx.Paragraph({
+                            children: [
+                                barCodeImg
+                            ]
+                        })
+                    ],
+                },
             ],
-        },
-    ],
-});
+        });
+
+        docx.Packer.toBuffer(doc).then((buffer) => {
+            fs.writeFileSync("output2.docx", buffer);
+            console.log("DOCX file created successfully!");
+        });
+
+        inputting = false;
+
+        if (inputting == false) {
+            spawn("powershell.exe", [command]);
+        }
+    }
+    rl.close();
+})();
+
 
 /*
 new docx.Paragraph({
@@ -105,10 +210,6 @@ new Paragraph({
                 }),
 */
 
-docx.Packer.toBuffer(doc).then((buffer) => {
-    fs.writeFileSync("output2.docx", buffer);
-    console.log("DOCX file created successfully!");
-});
 
 
 let currentFile = "output.docx";
