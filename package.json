@@ -1,18 +1,19 @@
 {
-  "name": "zebra-app",
+  "name": "zebra-printer-app",
   "version": "1.0.0",
-  "description": "Test",
-  "main": "main.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node ."
+    "start": "electron index.js"
   },
-  "author": "Nikola Bojinovic & Djordje Kostic",
+  "keywords": [],
+  "author": "",
   "license": "ISC",
+  "description": "",
   "dependencies": {
-    "child_process": "^1.0.2",
+    "electron": "^32.1.2"
+  },
+  "devDependencies": {
     "docx": "^8.5.0",
-    "docx-pdf": "^0.0.1",
-    "fs": "^0.0.1-security",
-    "pdf-to-printer": "^5.6.0"
+    "jsbarcode": "^3.11.6"
   }
 }
